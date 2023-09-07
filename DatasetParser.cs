@@ -1,6 +1,6 @@
 using Landis.Core;
 using Landis.Utilities;
-using Landis.Library.AgeOnlyCohorts;
+using Landis.Library.UniversalCohorts;
 using System.Collections.Generic;
 
 namespace Landis.Library.InitialCommunities
