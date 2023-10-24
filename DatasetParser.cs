@@ -3,6 +3,7 @@ using Landis.Utilities;
 using Landis.Library.UniversalCohorts;
 using System.Text;
 using System;
+using System.Dynamic;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace Landis.Library.InitialCommunities
     {
         private int successionTimestep;
         private ISpeciesDataset speciesDataset;
+        private ExpandoObject additionalParameters;
         //private static DataTable CSVCommunityDataTable;
 
 
@@ -36,10 +38,12 @@ namespace Landis.Library.InitialCommunities
         //---------------------------------------------------------------------
 
         public DatasetParser(int successionTimestep,
-                             ISpeciesDataset speciesDataset)
+                             ISpeciesDataset speciesDataset,
+                             ExpandoObject additionalParameters)
         {
             this.successionTimestep = successionTimestep;
             this.speciesDataset = speciesDataset;
+            this.additionalParameters = additionalParameters;
         }
 
         //---------------------------------------------------------------------
@@ -65,116 +69,11 @@ namespace Landis.Library.InitialCommunities
             Dataset dataset; // = new Dataset();
 
             InputVar<string> csv = new InputVar<string>("CSV_File");
-            if (ReadOptionalVar(csv))
-            {
-                dataset = ReadCSVInputFile(csv.Value);
-            }
-            else
-            {
-                dataset = ReadHumanReadableInputFile();
-            }
+            ReadVar(csv);
+            dataset = ReadCSVInputFile(csv.Value);
 
             return dataset;
 
-        }
-        //---------------------------------------------------------------------
-        private Dataset ReadHumanReadableInputFile()
-        {
-            Dataset dataset = new Dataset();
-
-            InputVar<uint> mapCode = new InputVar<uint>("MapCode");
-            InputVar<string> speciesName = new InputVar<string>("Species");
-            InputVar<ushort> age = new InputVar<ushort>("Age and Biomass");
-            //InputVar<uint> biomass = new InputVar<uint>("Biomass gm-2");
-            uint biomass = 0;
-
-            Dictionary<uint, int> mapCodeLineNumbers = new Dictionary<uint, int>();
-
-            while (!AtEndOfInput)
-            {
-                //  Read initial community
-                int mapCodeLineNum = LineNumber;
-                ReadVar(mapCode);
-                int lineNumber;
-                if (mapCodeLineNumbers.TryGetValue(mapCode.Value.Actual, out lineNumber))
-                    throw new InputValueException(mapCode.Value.String,
-                                                  "The map code {0} was previously used on line {1}",
-                                                  mapCode.Value.Actual, lineNumber);
-                else
-                    mapCodeLineNumbers[mapCode.Value.Actual] = mapCodeLineNum;
-
-                //  Read species and their ages
-                List<ISpeciesCohorts> speciesCohortsList;
-
-                speciesCohortsList = new List<ISpeciesCohorts>();
-                Dictionary<string, int> speciesLineNumbers = new Dictionary<string, int>();
-                while (!AtEndOfInput && CurrentName != mapCode.Name)
-                {
-                    StringReader currentLine = new StringReader(CurrentLine);
-
-                    ReadValue(speciesName, currentLine);
-                    ISpecies species = speciesDataset[speciesName.Value.Actual];
-                    if (species == null)
-                        throw new InputValueException(speciesName.Value.String,
-                                                      "{0} is not a species name.",
-                                                      speciesName.Value.String);
-                    if (speciesLineNumbers.TryGetValue(species.Name, out lineNumber))
-                        throw new InputValueException(speciesName.Value.String,
-                                                      "The species {0} was previously used on line {1}",
-                                                      speciesName.Value.String, lineNumber);
-                    else
-                        speciesLineNumbers[species.Name] = LineNumber;
-
-                    //  Read ages
-                    Dictionary<ushort, uint> ageBio = new Dictionary<ushort, uint>();
-                    TextReader.SkipWhitespace(currentLine);
-                    while (currentLine.Peek() != -1)
-                    {
-                        ReadValue(age, currentLine);
-                        if (age.Value.Actual == 0)
-                            throw new InputValueException(age.Value.String,
-                                                          "Ages must be > 0.");
-                        if (ageBio.ContainsKey(age.Value.Actual))
-                            throw new InputValueException(age.Value.String,
-                                                          "The age {0} appears more than once.",
-                                                          age.Value.String);
-                        if (age.Value.Actual > species.Longevity)
-                            throw new InputValueException(age.Value.String,
-                                                          "The age {0} is more than longevity ({1}).",
-                                                          age.Value.String, species.Longevity);
-                        //TextReader.SkipWhitespace(currentLine);
-
-                        //Landis.Library.Succession.Model.Core.UI.WriteLine("New read in biomass value.");
-                        biomass = ReadBiomass(currentLine);
-                        TextReader.SkipWhitespace(currentLine);
-                        ageBio.Add(age.Value.Actual, biomass);
-                    }
-                    if (ageBio.Count == 0)
-                        //  Try reading age which will throw exception
-                        ReadValue(age, currentLine);
-
-                    ageBio = BinAges(ageBio);
-
-
-                    foreach (ushort age_key in ageBio.Keys)
-                    {
-                        int initialWoodBiomass = (int) ageBio[age_key];
-                        //float initialLeafBiomass = (float) 0.0;
-                        if (initialWoodBiomass <= 0.0)
-                            throw new InputValueException(speciesName.Value.String,
-                                                          "Cohort {0}, age {1} has zero or negative biomass, line {2}",
-                                                          species.Name, age_key, lineNumber);
-
-                        speciesCohortsList.Add(new SpeciesCohorts(species, age_key, initialWoodBiomass));
-                    }
-
-                    GetNextLine();
-                }
-
-                dataset.Add(new Community(mapCode.Value.Actual, speciesCohortsList));
-            }
-
-            return dataset;
         }
 
         //---------------------------------------------------------------------
@@ -193,6 +92,7 @@ namespace Landis.Library.InitialCommunities
                 // Read First Record:  MapCode, Spp, Age, WoodBiomass
                 int mapCode = System.Convert.ToInt32(row["MapCode"]);
                 string speciesName = System.Convert.ToString(row["SpeciesName"]);
+                ExpandoObject addParams = new ExpandoObject();
 
                 List<ISpeciesCohorts> listOfCohorts = new List<ISpeciesCohorts>();
 
@@ -217,21 +117,28 @@ namespace Landis.Library.InitialCommunities
                     if (wood_biomass <= 0)
                         throw new InputValueException(wood_biomass.ToString(), "Wood biomass must be > 0.");
 
+                    IDictionary<string, object> tempObject = addParams;
+
+                    foreach (var test in this.additionalParameters)
+                    {
+                        tempObject.Add(test.Key, row[test.Key]);
+                    }
+
                     if (!mapCodeList.ContainsKey(mapCode))
                     {
                         mapCodeList.Add(mapCode, listOfCohorts);
-                        mapCodeList[mapCode].Add(new SpeciesCohorts(species, (ushort)age, wood_biomass));
+                        mapCodeList[mapCode].Add(new SpeciesCohorts(species, (ushort)age, wood_biomass, addParams));
                     }
                     else
                     {
-                        mapCodeList[mapCode].Add(new SpeciesCohorts(species, (ushort)age, wood_biomass));
+                        mapCodeList[mapCode].Add(new SpeciesCohorts(species, (ushort)age, wood_biomass, addParams));
                     }
 
                 }
 
             }
 
-            foreach (KeyValuePair<int, List<ISpeciesCohorts>> kvp in mapCodeList )
+            foreach (KeyValuePair<int, List<ISpeciesCohorts>> kvp in mapCodeList)
             {
                 dataset.Add(new Community((uint) kvp.Key, kvp.Value));
             }
