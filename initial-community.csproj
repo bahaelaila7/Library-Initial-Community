@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <RootNamespace>Landis.Library.InitialCommunity.Biomass</RootNamespace>
-    <AssemblyName>Landis.Library.InitialCommunity.Biomass</AssemblyName>
+    <RootNamespace>Landis.Library.InitialCommunity.Universal</RootNamespace>
+    <AssemblyName>Landis.Library.InitialCommunity.Universal</AssemblyName>
     <AssemblyTitle>Landis.Library.InitialCommunity.Biomass</AssemblyTitle>
     <AssemblyCompany>LANDIS-II Foundation</AssemblyCompany>
     <AssemblyProduct>Landis.Library.InitialCommunity.Biomass</AssemblyProduct>

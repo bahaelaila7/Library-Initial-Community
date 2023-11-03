@@ -7,7 +7,7 @@ using System.IO;
 using System.Data;
 using System.Text.RegularExpressions;
 
-namespace Landis.Library.InitialCommunities
+namespace Landis.Library.InitialCommunities.Universal
 {
     //CSVParser derived from code posted at http://aspnetcafe.com/post/CSV-to--DataTable-Parser.aspx
     //Modified for LANDIS-II by Brendan C. Ward, 4/15/2008

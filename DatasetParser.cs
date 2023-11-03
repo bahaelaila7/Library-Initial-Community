@@ -11,7 +11,7 @@ using System.Data;
 
 
 
-namespace Landis.Library.InitialCommunities
+namespace Landis.Library.InitialCommunities.Universal
 {
     /// <summary>
     /// A parser that reads a dataset of initial communities from text input.
