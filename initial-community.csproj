@@ -24,9 +24,8 @@
     <Description>InitialCommunity Library for LANDIS-II</Description>
     <PackageReleaseNotes>.NET Standard 2.0 update.</PackageReleaseNotes>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Landis.Core" Version="2.0.0" />
+    <PackageReference Include="Landis.Core" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>

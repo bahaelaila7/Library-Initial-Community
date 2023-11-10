@@ -105,7 +105,7 @@ namespace Landis.Library.InitialCommunities.Universal
                 else
                 {
                     int age = System.Convert.ToInt32(row["CohortAge"]);
-                    int wood_biomass = System.Convert.ToInt32(row["CohortBiomass"]);
+                    int biomass = System.Convert.ToInt32(row["CohortBiomass"]);
 
                     ISpecies species = speciesDataset[speciesName];
                     if (species == null)
@@ -114,8 +114,6 @@ namespace Landis.Library.InitialCommunities.Universal
                         throw new InputValueException(age.ToString(), "Ages must be > 0.");
                     if (age > species.Longevity)
                         throw new InputValueException(age.ToString(), "The age {0} is more than longevity ({1}).", age.ToString(), species.Longevity);
-                    if (wood_biomass <= 0)
-                        throw new InputValueException(wood_biomass.ToString(), "Wood biomass must be > 0.");
 
                     IDictionary<string, object> tempObject = addParams;
 
@@ -127,11 +125,11 @@ namespace Landis.Library.InitialCommunities.Universal
                     if (!mapCodeList.ContainsKey(mapCode))
                     {
                         mapCodeList.Add(mapCode, listOfCohorts);
-                        mapCodeList[mapCode].Add(new SpeciesCohorts(species, (ushort)age, wood_biomass, addParams));
+                        mapCodeList[mapCode].Add(new SpeciesCohorts(species, (ushort)age, biomass, addParams));
                     }
                     else
                     {
-                        mapCodeList[mapCode].Add(new SpeciesCohorts(species, (ushort)age, wood_biomass, addParams));
+                        mapCodeList[mapCode].Add(new SpeciesCohorts(species, (ushort)age, biomass, addParams));
                     }
 
                 }
