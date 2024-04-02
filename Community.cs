@@ -1,7 +1,7 @@
-using Landis.Library.AgeOnlyCohorts;
+using Landis.Library.UniversalCohorts;
 using System.Collections.Generic;
 
-namespace Landis.Library.InitialCommunities
+namespace Landis.Library.InitialCommunities.Universal
 {
     public class Community
         : ICommunity

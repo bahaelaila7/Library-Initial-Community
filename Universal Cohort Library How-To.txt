@@ -1,0 +1,115 @@
+OVERVIEW
+
+The Universal Cohort Library is the latest and greatest library for cohorts developed for v8 of LANDIS-II. The library is intended to take the place of ALL cohort libraries (LeafBiomass, AgeOnly, etc.) and get all the features of the various cohort libraries in one location. This will ultimately reduce complexity within the model and make it easier to develop for it. It is structured quite differently from the previous cohort libraries, so this guide has been put together to help understand how to use it.
+
+For an in-depth look at how to convert an extension to use this library, see:
+
+https://github.com/aruzicka555/Extension-NECN-Succession/commit/52b0f71c611daaeb3aa01bd48dda94325b8860e7
+
+and
+
+https://github.com/aruzicka555/Extension-NECN-Succession/commit/1123c4ce3604aebe1bf0b4199ce0e136bdc0d683
+
+These examples show the process for how NECN was modified to use this library.
+
+This is a two part solution consisting of Landis.Library.UniversalCohorts-v1 which will replace the cohort libraries, and Landis.Library.InitialCommunity.Universal which will also replace all initial community libraries.
+
+All cohorts now have the default parameters of Species, Age, Biomass, and ANPP. Any additional fields that may need to be added have to be done dynamically when an extension is initialized. This will be detailed below.
+
+HOW TO
+
+SWITCH TO LIBRARY:
+Remove all references to any version of the initial community or cohort libraries. Replace them with references to Landis.Library.InitialCommunity.Universal and Landis.Library.UniversalCohorts-v1. The errors which will pop up will actually be quite helpful, and more information might be found on them in the sections below.
+
+ADD NEW PARAMETERS:
+A new method has been added to all extensions called "AddCohortData". This method is intended to be overriden by each extension to add any variables to the cohorts that are needed. For example, NECN has Wood and Leaf Biomass added in this step. This method will execute first thing during the initialization of the model.
+
+Adding a new parameter must be done dynamically and can be a bit tricky. See the below for how this is done in NECN:
+
+public override void AddCohortData()
+{
+            dynamic tempObject = additionalCohortParameters;
+            tempObject.WoodBiomass = 0.0f;
+            tempObject.LeafBiomass = 0.0f;
+}
+
+AdditionalCohortParameters is where all additional cohort fields that are to be added must go. To access it, you must create an object using the "dynamic" keyword above referencing AdditionalCohortParameters. Once this is done, you can add a parameter of any type simply by referencing it as above. For example, if you wanted to add a name field to every cohort, the code would be:
+
+tempObject.Name = "{insert name here}"
+
+Keep in mind that all new cohorts will start with the values that are given to them in this AddCohortData method. So if you add a parameter called WoodBiomass and give it a value of 5.5, every new cohort will be created with this amount of WoodBiomass.
+
+USE/REFERENCE NEW PARAMETERS
+Once any additional parameters are added in the AddCohortData method, they can be referenced from any cohort dynamically. The parameters that are added will live in cohort.Data.AdditionalParameters. To use them, code much like the example in the above is needed. For example, if you have an additional parameter called LeafBiomass and you want to reference it, the code would look like this:
+
+dynamic additionalParameters = cohort.Data.AdditionalParameters;
+additionalParameters.LeafBiomass;
+
+The cohort.Data.AdditionalParameters can not be accessed directly, a dynamic object like the above is necessary to access them.
+
+Sometimes, when building the code errors will pop up about the types of these additional parameters. In these cases, you will need to be explicit about the type of the parameters. For example, if two additional parameters (called LeafBiomass and WoodBiomass) that are integers needed to be added together the code would look like:
+
+IDictionary<string, object> tempObject = parametersToAdd;
+
+int newBiomass = System.Convert.ToInt32(tempObject["LeafBiomass"]) + System.Convert.ToInt32(tempObject["WoodBiomass"]);
+
+Where "parametersToAdd" is an ExpandoObject containing the dynamic cohort parameters. System.Convert is a very handy method that can be used to convert variables to just about any type you need.
+
+INITIALIZE INITIAL COMMUNITIES
+Initial communities in the new Landis.Library.InitialCommunity.Universal library are handled slightly differently. Below is the code for how it is handled in NECN for reference:
+
+public override void InitializeSites(string initialCommunitiesText, string initialCommunitiesMap, ICore modelCore)
+        {
+            ModelCore.UI.WriteLine("   Loading initial communities from file \"{0}\" ...", initialCommunitiesText);
+            Landis.Library.InitialCommunities.Universal.DatasetParser parser = new Landis.Library.InitialCommunities.Universal.DatasetParser(Timestep, ModelCore.Species, additionalCohortParameters);
+            Landis.Library.InitialCommunities.Universal.IDataset communities = Landis.Data.Load<Landis.Library.InitialCommunities.Universal.IDataset>(initialCommunitiesText, parser);
+
+            ModelCore.UI.WriteLine("   Reading initial communities map \"{0}\" ...", initialCommunitiesMap);
+            IInputRaster<UIntPixel> map;
+            map = ModelCore.OpenRaster<UIntPixel>(initialCommunitiesMap);
+            using (map)
+            {
+                UIntPixel pixel = map.BufferPixel;
+                foreach (Site site in ModelCore.Landscape.AllSites)
+                {
+                    map.ReadBufferPixel();
+                    uint mapCode = pixel.MapCode.Value;
+                    if (!site.IsActive)
+                        continue;
+
+                    //if (!modelCore.Ecoregion[site].Active)
+                    //    continue;
+
+                    //modelCore.Log.WriteLine("ecoregion = {0}.", modelCore.Ecoregion[site]);
+
+                    ActiveSite activeSite = (ActiveSite)site;
+
+                    initialCommunity = communities.Find(mapCode);
+                    if (initialCommunity == null)
+                    {
+                        throw new ApplicationException(string.Format("Unknown map code for initial community: {0}", mapCode));
+                    }
+
+                    InitializeSite(activeSite); 
+                }
+            }
+        }
+
+There are two major changes to note. First, when creating a initial communities parser the additionalCohortParameters must be passed to it like so:
+
+Landis.Library.InitialCommunities.Universal.DatasetParser parser = new Landis.Library.InitialCommunities.Universal.DatasetParser(Timestep, ModelCore.Species, additionalCohortParameters);
+
+Secondly, human readable files for initial communities are no longer tenable. CSV files must be explicitly used and are defined in the initial communities input file like so:
+
+LandisData   "Initial Communities"
+CSV_File "CSV_File.csv"
+
+The input file for NECN looks like this:
+
+MapCode,SpeciesName,CohortAge,CohortBiomass,WoodBiomass,LeafBiomass
+3,PinuJeff,50,10,6000,1000
+
+Any additional parameters that are defined for a cohort (in the above case: WoodBiomass and LeafBiomass) must be defined at the top with their keyword in the first row, and every MapCode with a species must have a corresponding value. In the NECN case above, MapCode 3 with PinuJeff has 6000 for WoodBiomass and 1000 for LeafBiomass.
+
+ANY ADDITIONAL ISSUES OR QUESTIONS
+Feel free to email austen.ruzicka@gmail.com

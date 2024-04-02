@@ -1,4 +1,4 @@
-namespace Landis.Library.InitialCommunities
+namespace Landis.Library.InitialCommunities.Universal
 {
     /// <summary>
     /// Collection of initial communities.
