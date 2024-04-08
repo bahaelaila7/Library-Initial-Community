@@ -113,7 +113,7 @@ namespace Landis.Library.InitialCommunities.Universal
                     if (age == 0)
                         throw new InputValueException(age.ToString(), "Ages must be > 0.");
                     if (age > species.Longevity)
-                        throw new InputValueException(age.ToString(), "The age {0} is more than longevity ({1}).", age.ToString(), species.Longevity);
+                        throw new InputValueException(age.ToString(), "The {0} age {1} is more than longevity ({2}).",  speciesName, age.ToString(),species.Longevity);
 
                     IDictionary<string, object> tempObject = addParams;
 
