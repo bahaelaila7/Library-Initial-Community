@@ -22,6 +22,7 @@ namespace Landis.Library.InitialCommunities.Universal
         private int successionTimestep;
         private ISpeciesDataset speciesDataset;
         private ExpandoObject additionalParameters;
+        private string file;
         //private static DataTable CSVCommunityDataTable;
 
 
@@ -39,11 +40,13 @@ namespace Landis.Library.InitialCommunities.Universal
 
         public DatasetParser(int successionTimestep,
                              ISpeciesDataset speciesDataset,
-                             ExpandoObject additionalParameters)
+                             ExpandoObject additionalParameters,
+                             string file)
         {
             this.successionTimestep = successionTimestep;
             this.speciesDataset = speciesDataset;
             this.additionalParameters = additionalParameters;
+            this.file = file;
         }
 
         //---------------------------------------------------------------------
@@ -64,13 +67,8 @@ namespace Landis.Library.InitialCommunities.Universal
 
         protected override IDataset Parse()
         {
-            ReadLandisDataVar();
-
             Dataset dataset; // = new Dataset();
-
-            InputVar<string> csv = new InputVar<string>("CSV_File");
-            ReadVar(csv);
-            dataset = ReadCSVInputFile(csv.Value);
+            dataset = ReadCSVInputFile(file);
 
             return dataset;
 
@@ -79,6 +77,13 @@ namespace Landis.Library.InitialCommunities.Universal
         //---------------------------------------------------------------------
         private Dataset ReadCSVInputFile(string path)
         {
+            string fileExt = System.IO.Path.GetExtension(path);
+
+            if (fileExt != ".csv")
+            {
+                throw new Exception("Initial Commmunities File: " + path + " is not a CSV. Please provide an Initial Communities File in .csv format.");
+            }
+
             Dataset dataset = new Dataset();
             CSVParser communityParser = new CSVParser();
             DataTable communityTable = communityParser.ParseToDataTable(path);
