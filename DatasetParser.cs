@@ -124,7 +124,14 @@ namespace Landis.Library.InitialCommunities.Universal
 
                     foreach (var test in this.additionalParameters)
                     {
-                        tempObject.Add(test.Key, row[test.Key]);
+                        try
+                        {
+                            tempObject.Add(test.Key, row[test.Key]);
+                        }
+                        catch
+                        {
+                            Console.WriteLine("WARNING: " + test.Key + " not initialized in initial community file.");
+                        }
                     }
 
                     if (!mapCodeList.ContainsKey(mapCode))
