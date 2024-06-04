@@ -124,13 +124,14 @@ namespace Landis.Library.InitialCommunities.Universal
 
                     foreach (var test in this.additionalParameters)
                     {
-                        try
+                        if (row.Table.Columns.Contains(test.Key))
                         {
                             tempObject.Add(test.Key, row[test.Key]);
                         }
-                        catch
+                        else
                         {
                             Console.WriteLine("WARNING: " + test.Key + " not initialized in initial community file.");
+                            tempObject.Add(test.Key, test.Value);
                         }
                     }
 
