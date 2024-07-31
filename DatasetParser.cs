@@ -88,9 +88,14 @@ namespace Landis.Library.InitialCommunities.Universal
             CSVParser communityParser = new CSVParser();
             DataTable communityTable = communityParser.ParseToDataTable(path);
             Dictionary<int, List<ISpeciesCohorts>> mapCodeList = new Dictionary<int, List<ISpeciesCohorts>>();
+            Dictionary<string, bool> trackWarnings = new Dictionary<string, bool>();
+
+            foreach (var parm in this.additionalParameters)
+            {
+                trackWarnings.Add(parm.Key, false);
+            }
 
             //float initialLeafBiomass = (float)0.0;
-
 
             foreach (DataRow row in communityTable.Rows)
             {
@@ -118,9 +123,13 @@ namespace Landis.Library.InitialCommunities.Universal
                     if (age == 0)
                         throw new InputValueException(age.ToString(), "Ages must be > 0.");
                     if (age > species.Longevity)
-                        throw new InputValueException(age.ToString(), "The {0} age {1} is more than longevity ({2}).",  speciesName, age.ToString(),species.Longevity);
+                    {
+                        Console.WriteLine("WARNING!  AGE OF AN INITIAL CONDITION COHORT ({species, age}) EXCEEDS LONGEVITY.  AGE ASSIGNED=LONGEVITY-TIMESTEP TO ALLOW COHORT TO REPRODUCE PRIOR TO DEATH.  !!WARNING!!");
+                        age = species.Longevity - successionTimestep;
+                    }
 
                     IDictionary<string, object> tempObject = addParams;
+                    
 
                     foreach (var test in this.additionalParameters)
                     {
@@ -130,7 +139,11 @@ namespace Landis.Library.InitialCommunities.Universal
                         }
                         else
                         {
-                            Console.WriteLine("WARNING: " + test.Key + " not initialized in initial community file.");
+                            if (!trackWarnings[test.Key])
+                            {
+                                Console.WriteLine("WARNING: " + test.Key + " not initialized in initial community file.");
+                                trackWarnings[test.Key] = true;
+                            }
                             tempObject.Add(test.Key, test.Value);
                         }
                     }
