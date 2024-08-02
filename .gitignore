@@ -1,0 +1,16 @@
+
+.vs/initial-community/DesignTimeBuild/.dtbcache
+.vs/initial-community/v16/.suo
+.vs/initial-community/v16/Server/sqlite3/db.lock
+.vs/initial-community/v16/Server/sqlite3/storage.ide
+lib/Landis.Library.UniversalCohorts-v1.dll
+obj/Debug/netstandard2.0/initial-community.AssemblyInfo.cs
+obj/Debug/netstandard2.0/initial-community.AssemblyInfoInputs.cache
+obj/Debug/netstandard2.0/initial-community.assets.cache
+obj/Debug/netstandard2.0/initial-community.csproj.CoreCompileInputs.cache
+obj/Debug/netstandard2.0/initial-community.csprojAssemblyReference.cache
+obj/initial-community.csproj.nuget.cache
+obj/initial-community.csproj.nuget.dgspec.json
+obj/initial-community.csproj.nuget.g.props
+obj/initial-community.csproj.nuget.g.targets
+obj/project.assets.json
