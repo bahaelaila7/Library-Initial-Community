@@ -7,9 +7,9 @@
     <AssemblyProduct>Landis.Library.InitialCommunity.Biomass</AssemblyProduct>
     <AssemblyCopyright>LANDIS-II Foundation</AssemblyCopyright>        
     <AssemblyDescription>Initial Communities Library for LANDIS-II</AssemblyDescription>
-    <AssemblyVersion>1.0.1</AssemblyVersion>
-    <Version>1.0.1</Version>
-    <FileVersion>1.0.1</FileVersion>
+    <AssemblyVersion>1.1</AssemblyVersion>
+    <Version>1.1</Version>
+    <FileVersion>1.1</FileVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <RepositoryUrl>https://github.com/LANDIS-II-Foundation/Library-Initial-Community</RepositoryUrl>
