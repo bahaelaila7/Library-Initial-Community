@@ -24,6 +24,12 @@
     <Description>InitialCommunity Library for LANDIS-II</Description>
     <PackageReleaseNotes>.NET Standard 2.0 update.</PackageReleaseNotes>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Library-Core\src\Core\Landis.Core.csproj" />
+    <ProjectReference Include="..\Library-Universal-Cohort\universal-cohort.csproj" />
+  </ItemGroup>
+    <!--
   <ItemGroup>
     <PackageReference Include="Landis.Core" Version="3.0.1" />
   </ItemGroup>
@@ -32,5 +38,6 @@
       <HintPath>lib\Landis.Library.UniversalCohorts-v1.dll</HintPath>
     </Reference>
   </ItemGroup>
+    -->
   
 </Project>
